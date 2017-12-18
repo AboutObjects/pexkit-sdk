@@ -7,6 +7,7 @@
 //
 
 import UIKit
+import GLKit
 import WebRTC
 
 class ViewController: UIViewController,  UIPickerViewDataSource, UIPickerViewDelegate, RTCEAGLVideoViewDelegate {
@@ -21,6 +22,10 @@ class ViewController: UIViewController,  UIPickerViewDataSource, UIPickerViewDel
     var escalated: Bool = false
     var resolution: Resolution = Resolution.wcif
     @IBOutlet weak var resPicker: UIPickerView!
+    
+    var glkView: GLKView? {
+        return videoView.value(forKey: "glkView") as? GLKView
+    }
 
     @IBAction func joinClicked(_ sender: UIButton) {
 

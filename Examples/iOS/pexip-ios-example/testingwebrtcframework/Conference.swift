@@ -20,7 +20,7 @@ class Conference {
     var displayName: String = "DemoApp"
     var tokenResp: [String: AnyObject]?
     var token: String?
-    var pin: String?
+    var pin: String? = "8276792"
     var rosterList: [Participant] = []
     var call: Call?
     var dyingCall: Call?

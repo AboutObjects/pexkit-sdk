@@ -18,6 +18,7 @@
 		3C689F481E029A6D00B6681C /* WebRTC.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3C689F441E029A1200B6681C /* WebRTC.framework */; };
 		3C689F491E029A6D00B6681C /* WebRTC.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 3C689F441E029A1200B6681C /* WebRTC.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		3CD119E71E0157E3004EB5E0 /* pexip_logo.png in Resources */ = {isa = PBXBuildFile; fileRef = 3CD119E61E0157E3004EB5E0 /* pexip_logo.png */; };
+		B41512191FE2F8B20050D02A /* IronBowVideoView.m in Sources */ = {isa = PBXBuildFile; fileRef = B41512181FE2F8B20050D02A /* IronBowVideoView.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -47,6 +48,9 @@
 		3C14E4EB1DFAD8C600DC2799 /* Conference.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Conference.swift; sourceTree = "<group>"; };
 		3C689F441E029A1200B6681C /* WebRTC.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = WebRTC.framework; sourceTree = "<group>"; };
 		3CD119E61E0157E3004EB5E0 /* pexip_logo.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = pexip_logo.png; sourceTree = "<group>"; };
+		B41512171FE2F8B10050D02A /* testingwebrtcframework-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "testingwebrtcframework-Bridging-Header.h"; sourceTree = "<group>"; };
+		B41512181FE2F8B20050D02A /* IronBowVideoView.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = IronBowVideoView.m; sourceTree = "<group>"; };
+		B415121A1FE2F8E70050D02A /* IronBowVideoView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = IronBowVideoView.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -83,6 +87,8 @@
 			children = (
 				3C14E4D21DFAD43800DC2799 /* AppDelegate.swift */,
 				3C14E4D41DFAD43800DC2799 /* ViewController.swift */,
+				B415121A1FE2F8E70050D02A /* IronBowVideoView.h */,
+				B41512181FE2F8B20050D02A /* IronBowVideoView.m */,
 				3C14E4D61DFAD43800DC2799 /* Main.storyboard */,
 				3C14E4D91DFAD43800DC2799 /* Assets.xcassets */,
 				3C14E4DB1DFAD43800DC2799 /* LaunchScreen.storyboard */,
@@ -91,6 +97,7 @@
 				3C14E4EB1DFAD8C600DC2799 /* Conference.swift */,
 				3C14E4E81DFAD8A000DC2799 /* EventSource.swift */,
 				3CD119E61E0157E3004EB5E0 /* pexip_logo.png */,
+				B41512171FE2F8B10050D02A /* testingwebrtcframework-Bridging-Header.h */,
 			);
 			path = testingwebrtcframework;
 			sourceTree = "<group>";
@@ -128,7 +135,8 @@
 				TargetAttributes = {
 					3C14E4CE1DFAD43800DC2799 = {
 						CreatedOnToolsVersion = 8.2;
-						DevelopmentTeam = U7E3T6C2S4;
+						DevelopmentTeam = 7J7LD9SB6Q;
+						LastSwiftMigration = 0920;
 						ProvisioningStyle = Automatic;
 					};
 				};
@@ -173,6 +181,7 @@
 				3C14E4E91DFAD8A000DC2799 /* EventSource.swift in Sources */,
 				3C14E4EC1DFAD8C600DC2799 /* Call.swift in Sources */,
 				3C14E4ED1DFAD8C600DC2799 /* Conference.swift in Sources */,
+				B41512191FE2F8B20050D02A /* IronBowVideoView.m in Sources */,
 				3C14E4D51DFAD43800DC2799 /* ViewController.swift in Sources */,
 				3C14E4D31DFAD43800DC2799 /* AppDelegate.swift in Sources */,
 			);
@@ -297,7 +306,8 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				DEVELOPMENT_TEAM = U7E3T6C2S4;
+				CLANG_ENABLE_MODULES = YES;
+				DEVELOPMENT_TEAM = 7J7LD9SB6Q;
 				ENABLE_BITCODE = NO;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
@@ -307,6 +317,8 @@
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.pexip.ios.testingwebrtcframework;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_OBJC_BRIDGING_HEADER = "testingwebrtcframework/testingwebrtcframework-Bridging-Header.h";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 3.0;
 			};
 			name = Debug;
@@ -315,7 +327,8 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				DEVELOPMENT_TEAM = U7E3T6C2S4;
+				CLANG_ENABLE_MODULES = YES;
+				DEVELOPMENT_TEAM = 7J7LD9SB6Q;
 				ENABLE_BITCODE = NO;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
@@ -325,6 +338,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.pexip.ios.testingwebrtcframework;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_OBJC_BRIDGING_HEADER = "testingwebrtcframework/testingwebrtcframework-Bridging-Header.h";
 				SWIFT_VERSION = 3.0;
 			};
 			name = Release;
