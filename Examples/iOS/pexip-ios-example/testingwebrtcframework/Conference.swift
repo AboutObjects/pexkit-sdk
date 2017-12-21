@@ -50,7 +50,7 @@ class Conference {
     }
 
     func tryToJoin(completion: @escaping (ServiceError) -> Void) {
-        print("Attempting to join conference \(self.uri.conference)")
+        print("Attempting to join conference \(String(describing: self.uri.conference))")
 
         self.requestToken() { token in
             guard let token = token else {
@@ -143,7 +143,7 @@ class Conference {
         let task = URLSession.shared.dataTask(with: request) { data, response, error in
             do {
                 guard error == nil else {
-                    print("error with request: \(error)")
+                    print("error with request: \(String(describing: error))")
                     return
                 }
                 guard let data = data else {
@@ -186,7 +186,7 @@ class Conference {
         let task = URLSession.shared.dataTask(with: request) { data, response, error in
             do {
                 guard error == nil else {
-                    print("error with request: \(error)")
+                    print("error with request: \(String(describing: error))")
                     return
                 }
                 guard let data = data else {
@@ -237,7 +237,7 @@ class Conference {
         }
 
         self.eventSource?.onMessage { (id, event, data) in
-            print("Got message \(event) with id \(id) and it contained \(data)")
+            print("Got message \(String(describing: event)) with id \(String(describing: id)) and it contained \(String(describing: data))")
         }
 
     }
@@ -291,7 +291,7 @@ class Conference {
             let task = URLSession.shared.dataTask(with: request) { data, response, error in
                 do {
                     guard error == nil else {
-                        print("error with request: \(error)")
+                        print("error with request: \(String(describing: error))")
                         return
                     }
                     guard let data = data else {
@@ -320,7 +320,7 @@ class Conference {
                                     // check status and ACK the request to start the media flow
                                     // See https://docs.pexip.com/api_client/api_rest.htm?#ack
 
-                                    print("status for remote SDP was \(status)")
+                                    print("status for remote SDP was \(String(describing: status))")
                                     self.ack()
 
                                     completion(.ok)
@@ -363,7 +363,7 @@ class Conference {
         let task = URLSession.shared.dataTask(with: request) { data, response, error in
             print("doing")
             guard error == nil else {
-                print("error with request: \(error)")
+                print("error with request: \(String(describing: error))")
                 return
             }
             print("Call \(self.call!.uuid!.uuidString.lowercased()) acknowledged")
@@ -399,7 +399,7 @@ class Conference {
         }
         let task = URLSession.shared.dataTask(with: request) { data, response, error in
             guard error == nil else {
-                print("error with request: \(error)")
+                print("error with request: \(String(describing: error))")
                 return
             }
             // ignoring status here, we could parse it if we wanted to
@@ -461,7 +461,7 @@ class Conference {
         }
         let task = URLSession.shared.dataTask(with: request) { data, response, error in
             guard error == nil else {
-                print("error with request: \(error)")
+                print("error with request: \(String(describing: error))")
                 return
             }
             print("Token released, event source closed, we're outta here")

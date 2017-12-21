@@ -9,10 +9,61 @@
 import Foundation
 import WebRTC
 
-
+extension Call: AVCaptureVideoDataOutputSampleBufferDelegate
+{
+    public func captureOutput(_ output: AVCaptureOutput, didOutputSampleBuffer sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection) {
+        // TODO: Handle array of delegates...
+        
+        queue.async() { [weak self] in
+            self?.originalSampleBufferDelegate?.captureOutput?(output, didOutputSampleBuffer: sampleBuffer, from: connection)
+            self?.composeVideo(buffer: sampleBuffer, connection: connection)
+        }
+    }
+    public func captureOutput(_ output: AVCaptureOutput, didDrop sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection) {
+        // TODO: Handle array of delegates...
+        originalSampleBufferDelegate?.captureOutput?(output, didDrop: sampleBuffer, from: connection)
+    }
+    
+    
+    func composeVideo(buffer: CMSampleBuffer, connection: AVCaptureConnection) {
+        guard let imageBuffer = CMSampleBufferGetImageBuffer(buffer) else { return }
+        var image = CIImage(cvImageBuffer: imageBuffer, options: nil)
+        
+        globalOverlayView.updateImage()
+        
+        if let overlayImage = globalOverlayView.image,
+            let overlay = CIImage(image: overlayImage)?.applying(CGAffineTransform(scaleX: 0.5, y: 0.5)) {
+            image = overlay.compositingOverImage(image)
+        }
+        
+        ciContext.render(image, to: imageBuffer)
+    }
+    
+//    func update(buffer: CVPixelBuffer?, image: CIImage) {
+//        guard
+//            let pixelBuffer = buffer,
+//            let cgImage = image.cgImage else { return }
+//
+//        CVPixelBufferLockBaseAddress(pixelBuffer, CVPixelBufferLockFlags(rawValue: 0))
+//        let baseAddress = CVPixelBufferGetBaseAddress(pixelBuffer)
+//        let bitmapInfo = CGBitmapInfo(rawValue: CGBitmapInfo.byteOrder32Little.rawValue | CGImageAlphaInfo.premultipliedFirst.rawValue)
+//        let context = CGContext(data: baseAddress,
+//                                width: Int(image.extent.width),
+//                                height: Int(image.extent.height),
+//                                bitsPerComponent: 8,
+//                                bytesPerRow: CVPixelBufferGetBytesPerRow(pixelBuffer),
+//                                space: CGColorSpaceCreateDeviceRGB(),
+//                                bitmapInfo: bitmapInfo.rawValue)
+//        context?.draw(cgImage, in: image.extent)
+//        CVPixelBufferUnlockBaseAddress(pixelBuffer, CVPixelBufferLockFlags(rawValue: 0))
+//    }
+}
 
 class Call: NSObject, RTCPeerConnectionDelegate {
-
+    
+    var eaglContext = EAGLContext.init(api: .openGLES3)
+    lazy var ciContext = CIContext(eaglContext: self.eaglContext!, options: [kCIContextWorkingColorSpace: NSNull()])
+    
     var factory: RTCPeerConnectionFactory? = nil
     var rtcConfg: RTCConfiguration? = nil
     var rtcConst: RTCMediaConstraints? = nil
@@ -30,21 +81,21 @@ class Call: NSObject, RTCPeerConnectionDelegate {
     var localSdpCompletion: (RTCSessionDescription) -> Void
     var remoteSdpCompletion: ((NSError?) -> Void)? = nil
     var uuid: UUID?
-
-
+    
+    // - JML
+    var outboundAVCaptureSession: AVCaptureSession!
+    var originalSampleBufferDelegate: AVCaptureVideoDataOutputSampleBufferDelegate?
+    let queue = DispatchQueue(label: "Video Output")
+    
     init(uri: URI, videoView: RTCEAGLVideoView, videoEnabled: Bool, resolution: Resolution, completion: @escaping (RTCSessionDescription) -> Void) {
 
         print("Creating call")
         RTCInitializeSSL()
 
         self.factory = RTCPeerConnectionFactory()
-
         self.resolution = resolution
-
         self.videoView = videoView
-
         self.videoEnabled = videoEnabled
-
         self.rtcConfg = RTCConfiguration()
 
         // Set this to maxCompat for correct operation with Pexip MCU
@@ -72,7 +123,6 @@ class Call: NSObject, RTCPeerConnectionDelegate {
         super.init()
 
         self.peerConnection = self.factory?.peerConnection(with: rtcConfg!, constraints: rtcConst!, delegate: self)
-
         self.mediaStream = self.factory?.mediaStream(withStreamId: "PEXIP")
 
         if self.videoEnabled {
@@ -81,29 +131,51 @@ class Call: NSObject, RTCPeerConnectionDelegate {
             // let mandatory = ["minWidth":"192"]
             let constraints = RTCMediaConstraints.init(mandatoryConstraints: [:], optionalConstraints: [:])
             let videoSource = self.factory?.avFoundationVideoSource(with: constraints)
+            
             self.videoTrack = self.factory?.videoTrack(with: videoSource!, trackId: "PEXIPv0")
             self.mediaStream?.addVideoTrack(self.videoTrack!)
+            
+            // - JML
+            configureCaptureSession(captureSession: videoSource?.captureSession)
+            outboundAVCaptureSession = videoSource?.captureSession
+            configureVideoRenderer(track: videoTrack)
         }
         self.audioTrack = self.factory?.audioTrack(withTrackId: "PEXIPa0")
-
         self.mediaStream?.addAudioTrack(self.audioTrack!)
-
         self.peerConnection?.add(self.mediaStream!)
 
         print("About to offer")
         // this is effectively the session description delegate stuff from previous releases
         self.peerConnection?.offer(for: self.rtcConst!, completionHandler: offerCompletionHandler)
-
     }
-
+    
+    // - JML
+    func configureVideoRenderer(track: RTCVideoTrack?) {
+        guard let track = track else { return }
+        let renderer = CompositingVideoRenderer()
+//        renderer.overlayView =
+        track.add(renderer)
+    }
+    
+    // - JML
+    func configureCaptureSession(captureSession: AVCaptureSession?) {
+        outboundAVCaptureSession = captureSession
+        guard let captureSession = captureSession, captureSession.outputs.count > 0,
+            let outputs = captureSession.outputs as? [AVCaptureVideoDataOutput] else { return }
+        // TODO: Need to capture an array of delegates
+        originalSampleBufferDelegate = outputs[0].sampleBufferDelegate
+        
+        outputs[0].setSampleBufferDelegate(self, queue: queue)
+    }
+    
     func offerCompletionHandler(rtcSessionDescription: RTCSessionDescription?, error: Error?) {
 
         if error != nil {
             // do something with the error
-            print("error with completion handler for RTCSessionDescription: \(error?.localizedDescription)")
+            print("error with completion handler for RTCSessionDescription: \(String(describing: error?.localizedDescription))")
         } else {
             self.peerConnection?.setLocalDescription(rtcSessionDescription!) { error in
-                print("got error: \(error)")
+                print("got error: \(String(describing: error))")
             }
             print("got OK for offer completion handler for RTCSessionDescription")
         }
@@ -113,7 +185,7 @@ class Call: NSObject, RTCPeerConnectionDelegate {
         print("mutating remote SDP bandwidth")
         let mutated = self.mutateSdpToBandwidth(sdp: sdp)
         self.peerConnection?.setRemoteDescription(mutated) { error in
-            print("Setting remote SDP on connection, status: \(error)")
+            print("Setting remote SDP on connection, status: \(String(describing: error))")
             self.remoteSdpCompletion = completion
             completion(nil)
         }
@@ -189,7 +261,7 @@ class Call: NSObject, RTCPeerConnectionDelegate {
         var origSdp = sdp.sdp
         let bwLine = "b=AS:\(asValue)\r\nb=TIAS:\(tiasValue)\r\n"
         if range != nil {
-            origSdp.insert(contentsOf: bwLine.characters, at: range!.upperBound)
+            origSdp.insert(contentsOf: bwLine, at: range!.upperBound)
             return RTCSessionDescription(type: sdp.type, sdp: origSdp)
         } else {
             return sdp

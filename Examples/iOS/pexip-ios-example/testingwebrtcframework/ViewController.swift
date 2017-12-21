@@ -10,9 +10,13 @@ import UIKit
 import GLKit
 import WebRTC
 
+public var globalOverlayView: OverlayView!
+
 class ViewController: UIViewController,  UIPickerViewDataSource, UIPickerViewDelegate, RTCEAGLVideoViewDelegate {
 
-
+    public class var reallyGlobalOverlayView: OverlayView { return globalOverlayView }
+    
+    @IBOutlet public var overlayView: OverlayView!
     @IBOutlet var videoView: RTCEAGLVideoView!
     @IBOutlet weak var joinButton: UIButton!
     @IBOutlet weak var videoButton: UIButton!
@@ -26,7 +30,17 @@ class ViewController: UIViewController,  UIPickerViewDataSource, UIPickerViewDel
     var glkView: GLKView? {
         return videoView.value(forKey: "glkView") as? GLKView
     }
-
+    
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        self.videoButton.isEnabled = false
+        self.resPicker.dataSource = self
+        self.resPicker.delegate = self
+        self.videoView.delegate = self
+        
+        globalOverlayView = overlayView
+    }
+    
     @IBAction func joinClicked(_ sender: UIButton) {
 
         if self.uriField.text! == "" {
@@ -96,18 +110,9 @@ class ViewController: UIViewController,  UIPickerViewDataSource, UIPickerViewDel
             }
         }
     }
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        self.videoButton.isEnabled = false
-        self.resPicker.dataSource = self
-        self.resPicker.delegate = self
-        self.videoView.delegate = self
-        // Do any additional setup after loading the view, typically from a nib.
-    }
-
-    override func didReceiveMemoryWarning() {
-        super.didReceiveMemoryWarning()
-        // Dispose of any resources that can be recreated.
+    
+    func update() {
+        overlayView.updateImage()
     }
 
     public func pickerView(_ pickerView: UIPickerView, numberOfRowsInComponent component: Int) -> Int {

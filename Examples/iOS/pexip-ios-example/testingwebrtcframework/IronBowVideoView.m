@@ -4,6 +4,9 @@
 #import "IronBowVideoView.h"
 #import <UIKit/UIKit.h>
 #import <GLKit/GLKit.h>
+#import <CoreImage/CoreImage.h>
+
+#import "testingwebrtcframework-Swift.h"
 
 @interface RTCEAGLVideoView (IronBowAdditions)
 - (void)glkView:(GLKView *)view drawInRect:(CGRect)rect;
@@ -15,11 +18,17 @@
 
 @implementation IronBowVideoView
 
-- (void)glkView:(GLKView *)view drawInRect:(CGRect)rect
+- (void)layoutSubviews
 {
-    [super glkView:view drawInRect:rect];
-    self.count++;
-    if (self.count < 3) NSLog(@"In %s", __func__);
+    [super layoutSubviews];
+    self.eaglContext = [super valueForKey:@"glContext"];
+}
+
+- (CIContext *)ciContext {
+    if (!_ciContext) {
+        _ciContext = [CIContext contextWithEAGLContext:self.eaglContext options:@{ kCIContextWorkingColorSpace: NSNull.null }];
+    }
+    return _ciContext;
 }
 
 @end
