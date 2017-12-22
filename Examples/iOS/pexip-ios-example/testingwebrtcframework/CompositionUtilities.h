@@ -7,3 +7,7 @@
 void composeVideo(CMSampleBufferRef sampleBuffer);
 void composeVideoWithImage(CMSampleBufferRef sampleBuffer, CIImage *image);
 
+void PerformOperationWithImagePixelData(CGImageRef inImage, void (^operationToPerform)(void *data));
+CGContextRef CreateARGBBitmapContext(CGImageRef inImage);
+
+

@@ -111,9 +111,9 @@ class ViewController: UIViewController,  UIPickerViewDataSource, UIPickerViewDel
         }
     }
     
-    func update() {
-        overlayView.updateImage()
-    }
+//    func update() {
+//        overlayView.updateImage()
+//    }
 
     public func pickerView(_ pickerView: UIPickerView, numberOfRowsInComponent component: Int) -> Int {
         return Resolution.count

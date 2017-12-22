@@ -11,11 +11,11 @@ extension IronBowVideoView
         return value(forKey: "_glkView") as? GLKView
     }
     
-    open override func renderFrame(_ frame: RTCVideoFrame?) {
-//        super.renderFrame(frame)
-        guard let cvPixelBuffer = frame?.nativeHandle else { return }
-        draw(buffer: cvPixelBuffer)
-    }
+//    open override func renderFrame(_ frame: RTCVideoFrame?) {
+////        super.renderFrame(frame)
+//        guard let cvPixelBuffer = frame?.nativeHandle else { return }
+//        draw(buffer: cvPixelBuffer)
+//    }
     
     
     private func draw(buffer: CVImageBuffer) {

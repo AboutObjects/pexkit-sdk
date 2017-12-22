@@ -9,58 +9,36 @@
 import Foundation
 import WebRTC
 
+// - Spike Solution
 extension Call: AVCaptureVideoDataOutputSampleBufferDelegate
 {
     public func captureOutput(_ output: AVCaptureOutput, didOutputSampleBuffer sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection) {
-        // TODO: Handle array of delegates...
-        
         queue.async() { [weak self] in
-            self?.originalSampleBufferDelegate?.captureOutput?(output, didOutputSampleBuffer: sampleBuffer, from: connection)
             self?.composeVideo(buffer: sampleBuffer, connection: connection)
+            self?.originalSampleBufferDelegate?.captureOutput?(output, didOutputSampleBuffer: sampleBuffer, from: connection)
         }
     }
+    
     public func captureOutput(_ output: AVCaptureOutput, didDrop sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection) {
-        // TODO: Handle array of delegates...
         originalSampleBufferDelegate?.captureOutput?(output, didDrop: sampleBuffer, from: connection)
     }
     
-    
-    func composeVideo(buffer: CMSampleBuffer, connection: AVCaptureConnection) {
+    private func composeVideo(buffer: CMSampleBuffer, connection: AVCaptureConnection) {
         guard let imageBuffer = CMSampleBufferGetImageBuffer(buffer) else { return }
-        var image = CIImage(cvImageBuffer: imageBuffer, options: nil)
+        let videoFrameImage = CIImage(cvImageBuffer: imageBuffer, options: nil)
         
-        globalOverlayView.updateImage()
+        guard
+            let uiImage = globalOverlayView.image,
+            let overlayImage = CIImage(image: uiImage)?.applying(CGAffineTransform(translationX: 0, y: videoFrameImage.extent.height - uiImage.size.height - 50).scaledBy(x: 0.5, y: 0.5))
+            else { return }
         
-        if let overlayImage = globalOverlayView.image,
-            let overlay = CIImage(image: overlayImage)?.applying(CGAffineTransform(scaleX: 0.5, y: 0.5)) {
-            image = overlay.compositingOverImage(image)
-        }
-        
-        ciContext.render(image, to: imageBuffer)
+        ciContext.render(overlayImage, to: imageBuffer, bounds: overlayImage.extent, colorSpace: nil)
     }
-    
-//    func update(buffer: CVPixelBuffer?, image: CIImage) {
-//        guard
-//            let pixelBuffer = buffer,
-//            let cgImage = image.cgImage else { return }
-//
-//        CVPixelBufferLockBaseAddress(pixelBuffer, CVPixelBufferLockFlags(rawValue: 0))
-//        let baseAddress = CVPixelBufferGetBaseAddress(pixelBuffer)
-//        let bitmapInfo = CGBitmapInfo(rawValue: CGBitmapInfo.byteOrder32Little.rawValue | CGImageAlphaInfo.premultipliedFirst.rawValue)
-//        let context = CGContext(data: baseAddress,
-//                                width: Int(image.extent.width),
-//                                height: Int(image.extent.height),
-//                                bitsPerComponent: 8,
-//                                bytesPerRow: CVPixelBufferGetBytesPerRow(pixelBuffer),
-//                                space: CGColorSpaceCreateDeviceRGB(),
-//                                bitmapInfo: bitmapInfo.rawValue)
-//        context?.draw(cgImage, in: image.extent)
-//        CVPixelBufferUnlockBaseAddress(pixelBuffer, CVPixelBufferLockFlags(rawValue: 0))
-//    }
 }
 
-class Call: NSObject, RTCPeerConnectionDelegate {
-    
+class Call: NSObject, RTCPeerConnectionDelegate
+{
+    // - Spike Solution
     var eaglContext = EAGLContext.init(api: .openGLES3)
     lazy var ciContext = CIContext(eaglContext: self.eaglContext!, options: [kCIContextWorkingColorSpace: NSNull()])
     
@@ -82,7 +60,7 @@ class Call: NSObject, RTCPeerConnectionDelegate {
     var remoteSdpCompletion: ((NSError?) -> Void)? = nil
     var uuid: UUID?
     
-    // - JML
+    // - Spike Solution
     var outboundAVCaptureSession: AVCaptureSession!
     var originalSampleBufferDelegate: AVCaptureVideoDataOutputSampleBufferDelegate?
     let queue = DispatchQueue(label: "Video Output")
@@ -135,7 +113,7 @@ class Call: NSObject, RTCPeerConnectionDelegate {
             self.videoTrack = self.factory?.videoTrack(with: videoSource!, trackId: "PEXIPv0")
             self.mediaStream?.addVideoTrack(self.videoTrack!)
             
-            // - JML
+            // - Spike Solution
             configureCaptureSession(captureSession: videoSource?.captureSession)
             outboundAVCaptureSession = videoSource?.captureSession
             configureVideoRenderer(track: videoTrack)
@@ -149,15 +127,14 @@ class Call: NSObject, RTCPeerConnectionDelegate {
         self.peerConnection?.offer(for: self.rtcConst!, completionHandler: offerCompletionHandler)
     }
     
-    // - JML
+    // - Spike Solution
     func configureVideoRenderer(track: RTCVideoTrack?) {
         guard let track = track else { return }
         let renderer = CompositingVideoRenderer()
-//        renderer.overlayView =
         track.add(renderer)
     }
     
-    // - JML
+    // - Spike Solution
     func configureCaptureSession(captureSession: AVCaptureSession?) {
         outboundAVCaptureSession = captureSession
         guard let captureSession = captureSession, captureSession.outputs.count > 0,

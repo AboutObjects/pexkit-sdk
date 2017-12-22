@@ -18,7 +18,6 @@
 
 - (void)renderFrame:(RTCVideoFrame *)frame
 {
-    //NSLog(@"In %s, frame is %@", __func__, frame);
     [self compositeWithFrame: frame];
 }
 

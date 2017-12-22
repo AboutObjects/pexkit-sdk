@@ -135,9 +135,13 @@
                     </subviews>
                     <color key="backgroundColor" red="0.90196079019999997" green="0.90196079019999997" blue="0.90196079019999997" alpha="1" colorSpace="calibratedRGB"/>
                     <viewLayoutGuide key="safeArea" id="hsU-Wz-F2g"/>
+                    <connections>
+                        <outlet property="pulseLabel" destination="S6t-H2-hre" id="zvR-iQ-yi7"/>
+                        <outlet property="spo2Label" destination="rS9-Hb-hve" id="0s3-Hw-oh8"/>
+                    </connections>
                 </view>
             </objects>
-            <point key="canvasLocation" x="-172" y="-331"/>
+            <point key="canvasLocation" x="-239" y="-240"/>
         </scene>
     </scenes>
 </document>

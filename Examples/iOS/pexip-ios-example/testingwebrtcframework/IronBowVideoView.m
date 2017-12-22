@@ -18,17 +18,17 @@
 
 @implementation IronBowVideoView
 
-- (void)layoutSubviews
-{
-    [super layoutSubviews];
-    self.eaglContext = [super valueForKey:@"glContext"];
-}
-
-- (CIContext *)ciContext {
-    if (!_ciContext) {
-        _ciContext = [CIContext contextWithEAGLContext:self.eaglContext options:@{ kCIContextWorkingColorSpace: NSNull.null }];
-    }
-    return _ciContext;
-}
+//- (void)layoutSubviews
+//{
+//    [super layoutSubviews];
+//    self.eaglContext = [super valueForKey:@"glContext"];
+//}
+//
+//- (CIContext *)ciContext {
+//    if (!_ciContext) {
+//        _ciContext = [CIContext contextWithEAGLContext:self.eaglContext options:@{ kCIContextWorkingColorSpace: NSNull.null }];
+//    }
+//    return _ciContext;
+//}
 
 @end
