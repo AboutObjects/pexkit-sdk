@@ -46,7 +46,6 @@ class Conference {
         let hashData = hash.data(using: String.Encoding.ascii, allowLossyConversion: false)
         let finalHash = NSString(data: hashData!.base64EncodedData(), encoding: String.Encoding.utf8.rawValue)
         self.httpAuth = "Basic \(finalHash!)"
-
     }
 
     func tryToJoin(completion: @escaping (ServiceError) -> Void) {
@@ -213,160 +212,110 @@ class Conference {
     }
 
     func listenForEvents(failOnError: Bool) {
-
+        //
         // Documentation https://docs.pexip.com/api_client/api_rest.htm?#server_sent
-
+        //
         let path = "/api/client/v2/conferences/\(self.uri.conference!)/events"
         let urlStr = "https://\(self.uri.host!)\(path)"
-        var headers: [String:String] = [:]
-        if let auth = self.httpAuth {
-            headers["Authorization"] = auth
-        }
-        if let token = self.token {
-            headers["token"] = token
-        }
-        print("Creating event source...")
-        self.eventSource = EventSource(url: urlStr, headers: headers)
-
-        self.eventSource?.onOpen {
-            print("Event source opened")
-        }
-
-        self.eventSource?.onError { (error) in
-            print("Event source error")
-        }
-
-        self.eventSource?.onMessage { (id, event, data) in
-            print("Got message \(String(describing: event)) with id \(String(describing: id)) and it contained \(String(describing: data))")
-        }
-
+        var headers: [String: String] = [:]
+        if let auth = httpAuth { headers["Authorization"] = auth }
+        if let token = token { headers["token"] = token }
+        eventSource = EventSource(url: urlStr, headers: headers)
     }
-
-    func tryToEscalate(video: Bool, resolution: Resolution, completion: @escaping (ServiceError) -> Void) {
-        print("Creating call object")
-
-        self.call = Call(uri: self.uri, videoView: self.videoView!, videoEnabled: video, resolution: resolution) { sdp in
-
-            print("Call object said our SDP is: \(sdp)")
-
-            // Let's offer our SDP to the MCU using the participant function "call" on the API
-            // https://docs.pexip.com/api_client/api_rest.htm?#calls
-
-            let callOffer = [
-                "call_type": "WEBRTC",
-                "sdp": sdp.sdp
-            ]
-            let uuidString = self.myParticipantUUID!.uuidString.lowercased()
-            let urlString = "https://\(self.uri.host!)\(self.baseUri)\(self.uri.conference!)/participants/\(uuidString)/calls"
-            let jsonBody = try? JSONSerialization.data(withJSONObject: callOffer, options: [])
-            guard let url = URL(string: urlString)  else {
-                print("failed to build escalate URL")
-                return
-            }
-            var request = URLRequest(url: url)
-            request.httpMethod = "POST"
-            // The timeout here is greater as it can take up to 60s for the MCU 
-            // to timeout the outbound call if it doesn't reach a participant so
-            // we need to give it time to return a failure response to us rather
-            // than timing out the request ourselves
-            // You could use something like:
-            //   let action = url.lastPathComponent?.characters.split{$0 == "?"}.map(String.init)
-            //   let timeout = action![0] == "calls" ? self.callsQueryTimeout : self.queryTimeout
-            // in a generic "request" function for all calls to differentiate
-            // between call and non-call API queries
-            request.timeoutInterval = self.callQueryTimeout
-            request.cachePolicy = URLRequest.CachePolicy.reloadIgnoringCacheData
-            request.addValue("application/json", forHTTPHeaderField: "Content-type")
-            request.httpBody = jsonBody
-            if let auth = self.httpAuth {
-                request.addValue(auth, forHTTPHeaderField: "Authorization")
-            }
-
-            if let pin = self.pin {
-                request.addValue(pin, forHTTPHeaderField: "pin")
-            }
-            if let token = self.token {
-                request.addValue(token, forHTTPHeaderField: "token")
-            }
-            let task = URLSession.shared.dataTask(with: request) { data, response, error in
-                do {
-                    guard error == nil else {
-                        print("error with request: \(String(describing: error))")
-                        return
-                    }
-                    guard let data = data else {
-                        print("no data in response")
-                        return
-                    }
-                    guard let json = try JSONSerialization.jsonObject(with: data, options: []) as? [String: AnyObject] else {
-                        print("error trying to convert data to JSON")
-                        return
-                    }
-                    if let status = json["status"] as? String {
-                        if status.lowercased() == "success" {
-                            if let result = json["result"] as? [String: AnyObject] {
-
-                                // We should now have SDP and a new call uuid
-
-                                let uuidString = result["call_uuid"] as! String
-                                self.call?.uuid = UUID(uuidString: uuidString)
-                                let remoteSdp = result["sdp"] as! String
-                                print("Their SDP is: \(remoteSdp)")
-
-                                print("Setting remote SDP on call object")
-                                // Let's send their SDP back into the machine
-                                self.call?.setRemoteSdp(sdp: RTCSessionDescription(type: RTCSdpType.answer, sdp: remoteSdp)) { status in
-
-                                    // check status and ACK the request to start the media flow
-                                    // See https://docs.pexip.com/api_client/api_rest.htm?#ack
-
-                                    print("status for remote SDP was \(String(describing: status))")
-                                    self.ack()
-
-                                    completion(.ok)
-                                }
-                            }
-                        }
-                    }
-                } catch {
-                    print("Got error with call SDP")
-                }
-            }
-            task.resume()
-
-        }
+    
+    func participantRequest(url: URL) -> NSMutableURLRequest {
+        let request = NSMutableURLRequest(url: url)
+        request.httpMethod = "POST"
+        // The timeout here is greater as it can take up to 60s for the MCU
+        // to timeout the outbound call if it doesn't reach a participant so
+        // we need to give it time to return a failure response to us rather
+        // than timing out the request ourselves
+        // You could use something like:
+        //   let action = url.lastPathComponent?.characters.split{$0 == "?"}.map(String.init)
+        //   let timeout = action![0] == "calls" ? self.callsQueryTimeout : self.queryTimeout
+        // in a generic "request" function for all calls to differentiate
+        // between call and non-call API queries
+        request.timeoutInterval = callQueryTimeout
+        request.cachePolicy = URLRequest.CachePolicy.reloadIgnoringCacheData
+        request.addValues(["Content-type": "application/json",
+                           "Authorization": httpAuth,
+                           "pin": pin,
+                           "token": token])
+        return request as NSMutableURLRequest
     }
-
-
-    func ack() {
-
-        // Ack the call to start media
-        // Documentation: https://docs.pexip.com/api_client/api_rest.htm?#ack
-
-        let uuidString = self.myParticipantUUID!.uuidString.lowercased()
-        let urlString = "https://\(self.uri.host!)\(self.baseUri)\(self.uri.conference!)/participants/\(uuidString)/calls/\(self.call!.uuid!.uuidString.lowercased())/ack"
-        guard let url = URL(string: urlString)  else {
-            print("failed to build ack URL")
+    
+    var participantURLString: String? {
+        guard let uuid = myParticipantUUID, let host = uri.host, let conference = uri.conference else { return nil }
+        return "https://\(host)\(baseUri)\(conference)/participants/\(uuid.uuidString.lowercased())/calls"
+    }
+    var participantAcknowledgmentURLString: String? {
+        guard let uuid = call?.uuid, let urlString = participantURLString else { return nil }
+        return urlString.appending("/\(uuid.uuidString.lowercased())/ack")
+    }
+    
+    // Call the 'participants' REST API to offer the provided SDP to the MCU
+    // https://docs.pexip.com/api_client/api_rest.htm?#calls
+    //
+    func addParticipant(sdp: String, completion: @escaping (ServiceError) -> Void)
+    {
+        guard let urlString = participantURLString, let url = URL(string: urlString) else { return }
+        var request = participantRequest(url: url) as URLRequest
+        request.httpBody = try? JSONSerialization.data(withJSONObject: ["call_type": "WEBRTC", "sdp": sdp], options: [])
+        
+        let task = URLSession.shared.dataTask(with: request) { data, response, error in
+            self.handleParticipantResponse(data: data, response: response, error: error, completion: completion)
+        }
+        task.resume()
+    }
+    
+    func handleParticipantResponse(data: Data?, response: URLResponse?, error: Error?, completion: @escaping (ServiceError) -> Void) {
+        guard error == nil, let data = data, let json = (try? JSONSerialization.jsonObject(with: data, options: [])) as? [String: Any] else {
+            print(error == nil ? "Missing or unreadable data" : "Response error: \(String(describing: error))")
             return
         }
-        var request = URLRequest(url: url)
+        
+        // TODO: use model object instead of dictionary
+        guard let status = json["status"] as? String, status.lowercased() == "success",
+            let result = json["result"] as? [String: AnyObject],
+            let uuidString = result["call_uuid"] as? String,
+            let remoteSdp = result["sdp"] as? String else { return }
+        
+        print("Remote SDP: \(remoteSdp)")
+        call?.uuid = UUID(uuidString: uuidString)
+        call?.setRemoteSdp(sessionDescription: RTCSessionDescription(type: RTCSdpType.answer, sdp: remoteSdp)) { status in
+            
+            // check status and ACK the request to start the media flow
+            // See https://docs.pexip.com/api_client/api_rest.htm?#ack
+            //
+            print("Remote SDP status: \(String(describing: status))")
+            self.startCall()
+            completion(.ok)
+        }
+    }
+    
+    func tryToEscalate(video: Bool, resolution: Resolution, completion: @escaping (ServiceError) -> Void) {
+        call = Call(uri: self.uri, videoView: self.videoView!, videoEnabled: video, resolution: resolution) { sessionDescription in
+            self.addParticipant(sdp: sessionDescription.sdp, completion: completion)
+        }
+    }
+
+
+    // Start media
+    // Documentation: https://docs.pexip.com/api_client/api_rest.htm?#ack
+    //
+    func startCall() {
+
+        guard let urlString = participantAcknowledgmentURLString, let url = URL(string: urlString),
+            let auth = self.httpAuth, let token = token else { return }
+        let request = NSMutableURLRequest(url: url)
         request.httpMethod = "POST"
         request.cachePolicy = URLRequest.CachePolicy.reloadIgnoringCacheData
-        if let auth = self.httpAuth {
-            request.addValue(auth, forHTTPHeaderField: "Authorization")
-        }
-
-
-        if let token = self.token {
-            request.addValue(token, forHTTPHeaderField: "token")
-        }
-        let task = URLSession.shared.dataTask(with: request) { data, response, error in
-            print("doing")
+        request.addValues(["Authorization": auth, "token": token])
+        
+        let task = URLSession.shared.dataTask(with: request as URLRequest) { data, response, error in
             guard error == nil else {
-                print("error with request: \(String(describing: error))")
-                return
+                print("error with request: \(String(describing: error))"); return
             }
-            print("Call \(self.call!.uuid!.uuidString.lowercased()) acknowledged")
         }
         task.resume()
     }
@@ -493,4 +442,18 @@ class Participant {
 private extension Selector {
     static let refreshSelector =
         #selector(Conference.refreshToken(timer:))    
+}
+
+public extension NSMutableURLRequest
+{
+    public func addValues(_ values: [String: String?]) {
+        for (key, value) in values {
+            addValueIfNotNil(value, forHTTPHeaderField: key)
+        }
+    }
+    
+    public func addValueIfNotNil(_ value: String?, forHTTPHeaderField field: String) {
+        guard let value = value else { return }
+        addValue(value, forHTTPHeaderField: field)
+    }
 }

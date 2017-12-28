@@ -19,7 +19,6 @@
 		3C689F491E029A6D00B6681C /* WebRTC.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 3C689F441E029A1200B6681C /* WebRTC.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		3CD119E71E0157E3004EB5E0 /* pexip_logo.png in Resources */ = {isa = PBXBuildFile; fileRef = 3CD119E61E0157E3004EB5E0 /* pexip_logo.png */; };
 		B4142B4E1FEAEF5F0035317D /* CompositingVideoRenderer+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4142B4D1FEAEF5F0035317D /* CompositingVideoRenderer+Extensions.swift */; };
-		B4142B511FEB14BC0035317D /* CompositionUtilities.m in Sources */ = {isa = PBXBuildFile; fileRef = B4142B501FEB14BC0035317D /* CompositionUtilities.m */; };
 		B41512191FE2F8B20050D02A /* IronBowVideoView.m in Sources */ = {isa = PBXBuildFile; fileRef = B41512181FE2F8B20050D02A /* IronBowVideoView.m */; };
 		B42DEC451FE8592500C8AACC /* IronBowVideoView+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = B42DEC441FE8592500C8AACC /* IronBowVideoView+Extensions.swift */; };
 		B42DEC471FE8654700C8AACC /* OverlayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B42DEC461FE8654700C8AACC /* OverlayView.swift */; };
@@ -55,8 +54,6 @@
 		3CD119E61E0157E3004EB5E0 /* pexip_logo.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = pexip_logo.png; sourceTree = "<group>"; };
 		B4142B4C1FEAD7B00035317D /* CompositingVideoRenderer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CompositingVideoRenderer.h; sourceTree = "<group>"; };
 		B4142B4D1FEAEF5F0035317D /* CompositingVideoRenderer+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CompositingVideoRenderer+Extensions.swift"; sourceTree = "<group>"; };
-		B4142B4F1FEB14BC0035317D /* CompositionUtilities.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CompositionUtilities.h; sourceTree = "<group>"; };
-		B4142B501FEB14BC0035317D /* CompositionUtilities.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CompositionUtilities.m; sourceTree = "<group>"; };
 		B41512171FE2F8B10050D02A /* testingwebrtcframework-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "testingwebrtcframework-Bridging-Header.h"; sourceTree = "<group>"; };
 		B41512181FE2F8B20050D02A /* IronBowVideoView.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = IronBowVideoView.m; sourceTree = "<group>"; };
 		B415121A1FE2F8E70050D02A /* IronBowVideoView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = IronBowVideoView.h; sourceTree = "<group>"; };
@@ -108,8 +105,6 @@
 				3C14E4DB1DFAD43800DC2799 /* LaunchScreen.storyboard */,
 				3C14E4DE1DFAD43800DC2799 /* Info.plist */,
 				3C14E4EA1DFAD8C600DC2799 /* Call.swift */,
-				B4142B4F1FEB14BC0035317D /* CompositionUtilities.h */,
-				B4142B501FEB14BC0035317D /* CompositionUtilities.m */,
 				B4E686591FEAD386000200FD /* CompositingVideoRenderer.m */,
 				B4142B4C1FEAD7B00035317D /* CompositingVideoRenderer.h */,
 				B4142B4D1FEAEF5F0035317D /* CompositingVideoRenderer+Extensions.swift */,
@@ -206,7 +201,6 @@
 				B41512191FE2F8B20050D02A /* IronBowVideoView.m in Sources */,
 				3C14E4D51DFAD43800DC2799 /* ViewController.swift in Sources */,
 				B42DEC451FE8592500C8AACC /* IronBowVideoView+Extensions.swift in Sources */,
-				B4142B511FEB14BC0035317D /* CompositionUtilities.m in Sources */,
 				3C14E4D31DFAD43800DC2799 /* AppDelegate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

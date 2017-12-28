@@ -98,91 +98,57 @@ open class EventSource: NSObject, URLSessionDataDelegate {
     //Mark: Close
 
     open func close() {
-        self.readyState = EventSourceState.closed
-        self.urlSession?.invalidateAndCancel()
+        readyState = EventSourceState.closed
+        urlSession?.invalidateAndCancel()
     }
 
-    fileprivate func receivedMessageToClose(_ httpResponse: HTTPURLResponse?) -> Bool {
-        guard let response = httpResponse  else {
+    private func shouldClose(_ urlResponse: URLResponse?) -> Bool {
+        guard let response = urlResponse as? HTTPURLResponse, response.statusCode == 204 else {
             return false
         }
-
-        if response.statusCode == 204 {
-            self.close()
-            return true
-        }
-        return false
-    }
-
-    //Mark: EventListeners
-
-    open func onOpen(_ onOpenCallback: @escaping (() -> Void)) {
-        self.onOpenCallback = onOpenCallback
-    }
-
-    open func onError(_ onErrorCallback: @escaping ((NSError?) -> Void)) {
-        self.onErrorCallback = onErrorCallback
-
-        if let errorBeforeSet = self.errorBeforeSetErrorCallBack {
-            self.onErrorCallback!(errorBeforeSet)
-            self.errorBeforeSetErrorCallBack = nil
-        }
-    }
-
-    open func onMessage(_ onMessageCallback: @escaping ((_ id: String?, _ event: String?, _ data: String?) -> Void)) {
-        self.onMessageCallback = onMessageCallback
-    }
-
-    open func addEventListener(_ event: String, handler: @escaping ((_ id: String?, _ event: String?, _ data: String?) -> Void)) {
-        self.eventListeners[event] = handler
-    }
-
-    open func removeEventListener(_ event: String) -> Void {
-        self.eventListeners.removeValue(forKey: event)
-    }
-
-    open func events() -> Array<String> {
-        return Array(self.eventListeners.keys)
+        return true
     }
 
     //MARK: URLSessionDataDelegate
 
     open func urlSession(_ session: URLSession, dataTask: URLSessionDataTask, didReceive data: Data) {
-        if self.receivedMessageToClose(dataTask.response as? HTTPURLResponse) {
+        if shouldClose(dataTask.response) {
+            close()
             return
         }
 
-        if self.readyState != EventSourceState.open {
+        if readyState != EventSourceState.open {
             return
         }
 
-        self.receivedDataBuffer.append(data)
+        receivedDataBuffer.append(data)
         let eventStream = extractEventsFromBuffer()
-        self.parseEventStream(eventStream)
+        parseEventStream(eventStream)
     }
 
     open func urlSession(_ session: URLSession, dataTask: URLSessionDataTask, didReceive response: URLResponse, completionHandler: @escaping (URLSession.ResponseDisposition) -> Void) {
         completionHandler(URLSession.ResponseDisposition.allow)
 
-        if self.receivedMessageToClose(dataTask.response as? HTTPURLResponse) {
+        if shouldClose(dataTask.response) {
+            close()
             return
         }
 
-        self.readyState = EventSourceState.open
-        if self.onOpenCallback != nil {
-            DispatchQueue.main.async {
-                self.onOpenCallback!()
-            }
+        readyState = EventSourceState.open
+        guard let onOpenCallback = onOpenCallback else { return }
+        DispatchQueue.main.async {
+            onOpenCallback()
         }
     }
 
     open func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
-        self.readyState = EventSourceState.closed
+        readyState = EventSourceState.closed
 
-        if self.receivedMessageToClose(task.response as? HTTPURLResponse) {
+        if shouldClose(task.response) {
+            close()
             return
         }
-
+        
         if error == nil || (error! as NSError).code != -999 {
             let nanoseconds = Double(self.retryTime) / 1000.0 * Double(NSEC_PER_SEC)
             let delayTime = DispatchTime.now() + Double(Int64(nanoseconds)) / Double(NSEC_PER_SEC)

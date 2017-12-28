@@ -158,9 +158,9 @@ class Call: NSObject, RTCPeerConnectionDelegate
         }
     }
 
-    func setRemoteSdp(sdp: RTCSessionDescription, completion: @escaping (_ error: Error?) -> Void) {
+    func setRemoteSdp(sessionDescription: RTCSessionDescription, completion: @escaping (_ error: Error?) -> Void) {
         print("mutating remote SDP bandwidth")
-        let mutated = self.mutateSdpToBandwidth(sdp: sdp)
+        let mutated = self.mutateSdpToBandwidth(sessionDescription: sessionDescription)
         self.peerConnection?.setRemoteDescription(mutated) { error in
             print("Setting remote SDP on connection, status: \(String(describing: error))")
             self.remoteSdpCompletion = completion
@@ -204,11 +204,8 @@ class Call: NSObject, RTCPeerConnectionDelegate
     }
 
     func peerConnection(_ peerConnection: RTCPeerConnection, didChange newState: RTCIceGatheringState) {
-        if newState.rawValue == RTCIceGatheringState.complete.rawValue {
-            print("We've completed ICE gathering, send up the completed SDP")
-            // Now we can mangle the SDP to set the correct resolution settings
-            let mutated = self.mutateSdpToBandwidth(sdp: (self.peerConnection?.localDescription)!)
-            self.localSdpCompletion(mutated)
+        if let localDescription = peerConnection.localDescription, newState.rawValue == RTCIceGatheringState.complete.rawValue {
+            localSdpCompletion(mutateSdpToBandwidth(sessionDescription: localDescription))
         }
     }
 
@@ -226,7 +223,7 @@ class Call: NSObject, RTCPeerConnectionDelegate
 
     // SDP Mangling for BW/Resolution stuff
 
-    private func mutateSdpToBandwidth(sdp: RTCSessionDescription) -> RTCSessionDescription {
+    private func mutateSdpToBandwidth(sessionDescription: RTCSessionDescription) -> RTCSessionDescription {
         let h264BitsPerPixel = 0.06
         let fps = 30.0
         // if using AAC-LD --> 128.0
@@ -234,14 +231,14 @@ class Call: NSObject, RTCPeerConnectionDelegate
         let videoBw = Double(self.resolution!.width()) * Double(self.resolution!.height()) * fps * h264BitsPerPixel
         let asValue = Int((videoBw / 1000) + audioBw)
         let tiasValue = Int(videoBw + audioBw)
-        let range = sdp.sdp.range(of: "m=video.*\\r\\nc=IN.*\\r\\n", options: .regularExpression)
-        var origSdp = sdp.sdp
+        let range = sessionDescription.sdp.range(of: "m=video.*\\r\\nc=IN.*\\r\\n", options: .regularExpression)
+        var origSdp = sessionDescription.sdp
         let bwLine = "b=AS:\(asValue)\r\nb=TIAS:\(tiasValue)\r\n"
         if range != nil {
             origSdp.insert(contentsOf: bwLine, at: range!.upperBound)
-            return RTCSessionDescription(type: sdp.type, sdp: origSdp)
+            return RTCSessionDescription(type: sessionDescription.type, sdp: origSdp)
         } else {
-            return sdp
+            return sessionDescription
         }
 
     }
