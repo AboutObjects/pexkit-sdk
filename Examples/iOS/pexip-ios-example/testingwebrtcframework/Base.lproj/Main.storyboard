@@ -70,6 +70,18 @@
                                 <fontDescription key="fontDescription" type="system" pointSize="14"/>
                                 <textInputTraits key="textInputTraits"/>
                             </textField>
+                            <view contentMode="scaleToFill" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="7JN-c6-KfV">
+                                <rect key="frame" x="152" y="278" width="207" height="111"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
+                                <subviews>
+                                    <view contentMode="scaleToFill" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="glG-0v-j8T" customClass="IronBowVideoView">
+                                        <rect key="frame" x="8" y="8" width="191" height="95"/>
+                                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                                        <color key="backgroundColor" red="0.7019608021" green="0.7019608021" blue="0.7019608021" alpha="1" colorSpace="calibratedRGB"/>
+                                    </view>
+                                </subviews>
+                                <color key="backgroundColor" red="0.90196079019999997" green="0.90196079019999997" blue="0.90196079019999997" alpha="1" colorSpace="calibratedRGB"/>
+                            </view>
                         </subviews>
                         <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                         <constraints>
@@ -92,6 +104,7 @@
                     </view>
                     <connections>
                         <outlet property="joinButton" destination="72J-8a-eIE" id="wC1-kB-zrE"/>
+                        <outlet property="localVideoView" destination="glG-0v-j8T" id="yfQ-Ru-7js"/>
                         <outlet property="overlayView" destination="PY0-bM-2fS" id="qaO-E5-bpm"/>
                         <outlet property="resPicker" destination="dkf-NU-H7Y" id="M0A-ZD-nZC"/>
                         <outlet property="uriField" destination="LbI-lt-C5z" id="6pO-MA-jw0"/>
@@ -141,7 +154,7 @@
                     </connections>
                 </view>
             </objects>
-            <point key="canvasLocation" x="-239" y="-240"/>
+            <point key="canvasLocation" x="-631.20000000000005" y="-347.67616191904051"/>
         </scene>
     </scenes>
 </document>

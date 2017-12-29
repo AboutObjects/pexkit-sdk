@@ -18,6 +18,8 @@ class ViewController: UIViewController,  UIPickerViewDataSource, UIPickerViewDel
     
     @IBOutlet public var overlayView: OverlayView!
     @IBOutlet var videoView: RTCEAGLVideoView!
+    @IBOutlet var localVideoView: IronBowVideoView!
+    
     @IBOutlet weak var joinButton: UIButton!
     @IBOutlet weak var videoButton: UIButton!
     @IBOutlet weak var uriField: UITextField!
@@ -76,7 +78,9 @@ class ViewController: UIViewController,  UIPickerViewDataSource, UIPickerViewDel
         if !self.escalated {
             print("Escalating")
             self.conference?.videoView = self.videoView
-
+            
+            conference?.localVideoView = localVideoView
+            
             self.conference?.tryToEscalate(video: true, resolution: self.resolution) { status in
                 DispatchQueue.main.async {
                     print("Video status was \(status)")

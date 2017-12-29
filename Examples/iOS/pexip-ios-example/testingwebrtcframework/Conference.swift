@@ -8,6 +8,7 @@
 
 import Foundation
 import WebRTC
+import GLKit
 
 // Simple enum to pass back errors to the application
 enum ServiceError {
@@ -30,6 +31,7 @@ class Conference {
     var myParticipantUUID: UUID?
 
     var videoView: RTCEAGLVideoView?
+    var localVideoView: IronBowVideoView!
 
     var queryTimeout: TimeInterval = 7
     var callQueryTimeout: TimeInterval = 62
@@ -294,9 +296,10 @@ class Conference {
     }
     
     func tryToEscalate(video: Bool, resolution: Resolution, completion: @escaping (ServiceError) -> Void) {
-        call = Call(uri: self.uri, videoView: self.videoView!, videoEnabled: video, resolution: resolution) { sessionDescription in
+        call = Call(videoView: self.videoView!, videoEnabled: video, resolution: resolution) { sessionDescription in
             self.addParticipant(sdp: sessionDescription.sdp, completion: completion)
         }
+        call?.localVideoView = localVideoView
     }
 
 

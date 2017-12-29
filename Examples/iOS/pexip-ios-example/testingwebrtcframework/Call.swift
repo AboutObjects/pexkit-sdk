@@ -8,6 +8,7 @@
 
 import Foundation
 import WebRTC
+import GLKit
 
 // - Spike Solution
 extension Call: AVCaptureVideoDataOutputSampleBufferDelegate
@@ -26,6 +27,8 @@ extension Call: AVCaptureVideoDataOutputSampleBufferDelegate
     private func composeVideo(buffer: CMSampleBuffer, connection: AVCaptureConnection) {
         guard let imageBuffer = CMSampleBufferGetImageBuffer(buffer) else { return }
         let videoFrameImage = CIImage(cvImageBuffer: imageBuffer, options: nil)
+        
+        localVideoView.draw(buffer: imageBuffer)
         
         guard
             let uiImage = globalOverlayView.image,
@@ -51,7 +54,18 @@ class Call: NSObject, RTCPeerConnectionDelegate
     var audioTrack: RTCAudioTrack? = nil
     var mediaStream: RTCMediaStream? = nil
     var videoEnabled: Bool = false
+    
     var videoView: RTCEAGLVideoView? = nil
+    var localVideoView: IronBowVideoView! {
+        didSet {
+            let eaglContext = EAGLContext.init(api: .openGLES3)
+            let ciContext = CIContext(eaglContext: eaglContext!, options: [kCIContextWorkingColorSpace: NSNull()])
+            localVideoView.ciContext = ciContext
+            localVideoView.eaglContext = eaglContext
+            localVideoView.glkView?.context = eaglContext!
+        }
+    }
+    
     var connected = false
 
     var resolution: Resolution? = nil
@@ -65,7 +79,7 @@ class Call: NSObject, RTCPeerConnectionDelegate
     var originalSampleBufferDelegate: AVCaptureVideoDataOutputSampleBufferDelegate?
     let queue = DispatchQueue(label: "Video Output")
     
-    init(uri: URI, videoView: RTCEAGLVideoView, videoEnabled: Bool, resolution: Resolution, completion: @escaping (RTCSessionDescription) -> Void) {
+    init(videoView: RTCEAGLVideoView, videoEnabled: Bool, resolution: Resolution, completion: @escaping (RTCSessionDescription) -> Void) {
 
         print("Creating call")
         RTCInitializeSSL()
