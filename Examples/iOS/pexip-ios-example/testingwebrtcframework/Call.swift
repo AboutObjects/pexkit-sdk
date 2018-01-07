@@ -39,7 +39,7 @@ extension Call: AVCaptureVideoDataOutputSampleBufferDelegate
     }
 }
 
-class Call: NSObject, RTCPeerConnectionDelegate
+class Call: NSObject
 {
     // - Spike Solution
     var eaglContext = EAGLContext.init(api: .openGLES3)
@@ -71,7 +71,6 @@ class Call: NSObject, RTCPeerConnectionDelegate
     var resolution: Resolution? = nil
 
     var localSdpCompletion: (RTCSessionDescription) -> Void
-    var remoteSdpCompletion: ((NSError?) -> Void)? = nil
     var uuid: UUID?
     
     // - Spike Solution
@@ -111,7 +110,7 @@ class Call: NSObject, RTCPeerConnectionDelegate
         // 
         // let emptyConstraints = RTCMediaConstraints(mandatoryConstraints: [:], optionalConstraints: [:])
 
-        self.localSdpCompletion = completion
+        self.localSdpCompletion = completion // Calls addParticipant
         super.init()
 
         self.peerConnection = self.factory?.peerConnection(with: rtcConfg!, constraints: rtcConst!, delegate: self)
@@ -177,11 +176,13 @@ class Call: NSObject, RTCPeerConnectionDelegate
         let mutated = self.mutateSdpToBandwidth(sessionDescription: sessionDescription)
         self.peerConnection?.setRemoteDescription(mutated) { error in
             print("Setting remote SDP on connection, status: \(String(describing: error))")
-            self.remoteSdpCompletion = completion
             completion(nil)
         }
     }
+}
 
+extension Call: RTCPeerConnectionDelegate
+{
     // RTCPeerConnectionDelegate functions
 
     func peerConnection(_ peerConnection: RTCPeerConnection, didChange stateChanged: RTCSignalingState) {
@@ -237,7 +238,7 @@ class Call: NSObject, RTCPeerConnectionDelegate
 
     // SDP Mangling for BW/Resolution stuff
 
-    private func mutateSdpToBandwidth(sessionDescription: RTCSessionDescription) -> RTCSessionDescription {
+    func mutateSdpToBandwidth(sessionDescription: RTCSessionDescription) -> RTCSessionDescription {
         let h264BitsPerPixel = 0.06
         let fps = 30.0
         // if using AAC-LD --> 128.0

@@ -25,7 +25,7 @@ class Conference {
     var rosterList: [Participant] = []
     var call: Call?
     var dyingCall: Call?
-    var queue = DispatchQueue(label: "com.pexip.demoapp")
+//    var queue = DispatchQueue(label: "com.pexip.demoapp")
     var eventSource: EventSource?
     var refreshTimer: Timer?
     var myParticipantUUID: UUID?

@@ -188,7 +188,7 @@ open class EventSource: NSObject, URLSessionDataDelegate {
 
         // Remove the found events from the buffer
         self.receivedDataBuffer.replaceBytes(in: NSRange(location: 0, length: searchRange.location), withBytes: nil, length: 0)
-
+        
         return events
     }
 
